@@ -1,18 +1,29 @@
-services:
-  - type: web
-    name: memorymeet-backend
-    runtime: python
-    runtimeVersion: "3.12.7"
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
-    envVars:
+# Exported from Render on 2026-06-07T23:16:11Z
+version: "1"
+projects:
+- name: MemoryMeet
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: MemoryMeet
+      runtime: python
+      runtimeVersion: "3.12.7"
+      repo: https://github.com/shaswat-shukla-dev/MemoryMeet
+      plan: free
+      region: singapore
+      rootDir: backend
+      buildCommand: pip install -r requirements.txt
+      startCommand: "gunicorn app:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
+      autoDeployTrigger: commit
+      envVars:
       - key: GROQ_API_KEY
         sync: false
-      - key: HINDSIGHT_BASE_URL
-        sync: false
       - key: HINDSIGHT_API_KEY
+        sync: false
+      - key: HINDSIGHT_BASE_URL
         sync: false
       - key: FRONTEND_URL
         sync: false
       - key: DATABASE_URL
-        value: sqlite:///./memorymeet.db
+        sync: false
