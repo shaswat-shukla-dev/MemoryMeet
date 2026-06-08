@@ -15,9 +15,15 @@ app = FastAPI(title="MemoryMeet API", version="1.0.0")
 
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+origins = [
+    "http://localhost:5173",
+    "https://memory-meet.vercel.app",  # hardcoded — wildcard doesn't work
+    frontend_url,                       # from Render env variable
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url, "http://localhost:5173", "https://*.vercel.app"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
