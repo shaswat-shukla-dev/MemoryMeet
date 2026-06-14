@@ -8,6 +8,15 @@ const DEMO_DATA = [
   { contact_name: "Priya Kapoor", company: "DataForge", role: "CEO", meeting_notes: "Wants to move fast. Budget flexible. Concerned about compliance. Needs executive dashboard. Requested a demo next week." },
 ];
 
+const WHAT_STORED = [
+  { icon: "🏢", text: "Contact & company info" },
+  { icon: "⚠️", text: "Concerns & objections" },
+  { icon: "💰", text: "Budget discussions" },
+  { icon: "🤝", text: "Promises & commitments" },
+  { icon: "📅", text: "Follow-up deadlines" },
+  { icon: "✅", text: "Meeting outcomes" },
+];
+
 export default function AddMeeting() {
   const [form, setForm] = useState({ contact_name: "", company: "", role: "", meeting_notes: "" });
   const [loading, setLoading] = useState(false);
@@ -18,188 +27,135 @@ export default function AddMeeting() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.contact_name || !form.meeting_notes) {
-      setError("Contact name and meeting notes are required.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    try {
-      const res = await addMeeting(form);
-      setSuccess(res);
-      setForm({ contact_name: "", company: "", role: "", meeting_notes: "" });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fillDemo = (data) => {
-    setForm(data);
-    setSuccess(null);
-    setError("");
+    if (!form.contact_name || !form.meeting_notes) { setError("Contact name and notes are required."); return; }
+    setLoading(true); setError("");
+    try { setSuccess(await addMeeting(form)); setForm({ contact_name: "", company: "", role: "", meeting_notes: "" }); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="page-container"
-    >
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Add Meeting</h1>
-        <p className="text-white/40">Log a meeting to build memory for this contact.</p>
-      </div>
-
-      {/* Demo quick-fill */}
-      <div className="mb-6">
-        <p className="text-xs text-white/30 mb-2 uppercase tracking-wider">Quick demo fill</p>
-        <div className="flex flex-wrap gap-2">
-          {DEMO_DATA.map((d) => (
-            <button
-              key={d.contact_name}
-              onClick={() => fillDemo(d)}
-              className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-primary-500/40 transition-all"
-            >
-              {d.contact_name}
-            </button>
-          ))}
+    <div className="page">
+      {/* Header */}
+      <div style={{
+        background: "linear-gradient(165deg, #0f0520 0%, #1a0845 60%, #0a1520 100%)",
+        padding: "56px 20px 32px",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 55% 60% at 80% 30%, rgba(124,58,237,0.2) 0%, transparent 100%)" }} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div className="badge badge-purple" style={{ marginBottom: 12 }}>📝 LOG MEETING</div>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 6 }}>Add Meeting</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>Build relationship memory, one note at a time.</div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-6">
+      <div className="section">
+        {/* Demo quick-fill */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+            Quick demo fill
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {DEMO_DATA.map((d) => (
+              <button
+                key={d.contact_name}
+                onClick={() => { setForm(d); setSuccess(null); setError(""); }}
+                className="btn-secondary"
+                style={{ fontSize: 12, padding: "7px 14px" }}
+              >
+                {d.contact_name}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-5">
-          <div className="glass-card p-6 space-y-5">
-            <div>
-              <label className="label">Contact Name *</label>
-              <input
-                name="contact_name"
-                value={form.contact_name}
-                onChange={handleChange}
-                placeholder="e.g. Sarah Chen"
-                className="input-field"
-                required
-              />
+        <form onSubmit={handleSubmit}>
+          <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+            {/* Contact name */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8, letterSpacing: "0.04em" }}>
+                CONTACT NAME *
+              </label>
+              <input name="contact_name" value={form.contact_name} onChange={handleChange}
+                placeholder="e.g. Sarah Chen" className="input" required />
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+
+            {/* Company + Role row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div>
-                <label className="label">Company</label>
-                <input
-                  name="company"
-                  value={form.company}
-                  onChange={handleChange}
-                  placeholder="e.g. Acme Corp"
-                  className="input-field"
-                />
+                <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8, letterSpacing: "0.04em" }}>COMPANY</label>
+                <input name="company" value={form.company} onChange={handleChange} placeholder="Acme Corp" className="input" />
               </div>
               <div>
-                <label className="label">Role</label>
-                <input
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  placeholder="e.g. CTO"
-                  className="input-field"
-                />
+                <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8, letterSpacing: "0.04em" }}>ROLE</label>
+                <input name="role" value={form.role} onChange={handleChange} placeholder="CTO" className="input" />
               </div>
             </div>
+
+            {/* Notes */}
             <div>
-              <label className="label">Meeting Notes *</label>
-              <textarea
-                name="meeting_notes"
-                value={form.meeting_notes}
-                onChange={handleChange}
-                placeholder="Describe what happened: concerns raised, budget discussed, promises made, objections, next steps..."
-                rows={6}
-                className="input-field resize-none"
-                required
-              />
-              <p className="text-xs text-white/25 mt-1.5">Be specific — the more detail, the smarter the memory.</p>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 8, letterSpacing: "0.04em" }}>
+                MEETING NOTES *
+              </label>
+              <textarea name="meeting_notes" value={form.meeting_notes} onChange={handleChange}
+                placeholder="Describe concerns, budget discussed, promises made, next steps..."
+                rows={5} className="input textarea" required />
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 8 }}>
+                💡 The more detail, the smarter the memory.
+              </div>
             </div>
           </div>
 
+          {/* Feedback */}
           <AnimatePresence>
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"
-              >
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ padding: "12px 16px", borderRadius: 14, marginBottom: 14, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 13, color: "#f87171" }}>
                 {error}
               </motion.div>
             )}
             {success && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30"
-              >
-                <div className="flex items-center gap-2 text-emerald-400 font-semibold mb-1">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Meeting stored successfully!
+              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                style={{ padding: "14px 18px", borderRadius: 14, marginBottom: 14, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: "#34d399", marginBottom: 4, fontSize: 14 }}>
+                  ✅ Meeting stored successfully!
                 </div>
-                <div className="text-xs text-emerald-300/60">
+                <div style={{ fontSize: 12, color: "rgba(52,211,153,0.6)" }}>
                   Memory saved · Contact #{success.contact_id} · Meeting #{success.meeting_id}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="btn-primary" style={{ marginBottom: 24 }}>
             {loading ? (
               <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                  style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }}
+                />
                 Saving to memory...
               </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Save Meeting
-              </>
-            )}
+            ) : "💾 Save Meeting"}
           </button>
         </form>
 
-        {/* Side info */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="glass-card p-5">
-            <h3 className="font-semibold text-white mb-3 text-sm">What gets stored?</h3>
-            <ul className="space-y-2">
-              {[
-                "Contact details & company info",
-                "Concerns & objections raised",
-                "Budget & pricing discussions",
-                "Promises & commitments made",
-                "Follow-up items & deadlines",
-                "Meeting outcomes",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-xs text-white/50">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 flex-shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="glass-card p-5 bg-primary-600/10 border-primary-500/20">
-            <div className="text-xs text-primary-300 font-semibold mb-1 uppercase tracking-wider">Hindsight Memory</div>
-            <p className="text-xs text-white/40 leading-relaxed">
-              Every note is parsed and stored as structured memory. The more meetings you log, the smarter your briefs become.
-            </p>
+        {/* What gets stored */}
+        <div className="card" style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 14 }}>What gets stored?</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {WHAT_STORED.map(({ icon, text }) => (
+              <div key={text} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                <span style={{ fontSize: 16 }}>{icon}</span>
+                {text}
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -2,62 +2,81 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getBrief } from "../services/api";
 
-function HealthMeter({ score }) {
-  const color = score >= 80 ? "emerald" : score >= 60 ? "yellow" : "red";
-  const colorMap = {
-    emerald: { bar: "bg-emerald-500", text: "text-emerald-400", ring: "border-emerald-500/40" },
-    yellow: { bar: "bg-yellow-500", text: "text-yellow-400", ring: "border-yellow-500/40" },
-    red: { bar: "bg-red-500", text: "text-red-400", ring: "border-red-500/40" },
-  };
-  const c = colorMap[color];
+function ScoreRing({ score }) {
+  const color = score >= 80 ? "#34d399" : score >= 60 ? "#fbbf24" : "#f87171";
+  const r = 36;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (score / 100) * circumference;
+  const label = score >= 80 ? "Strong momentum — relationship is thriving."
+    : score >= 60 ? "Moderate — some follow-ups may be overdue."
+    : "At risk — missed commitments detected.";
 
   return (
-    <div className={`glass-card p-5 border ${c.ring}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-white/70">Relationship Health</span>
-        <span className={`text-3xl font-bold ${c.text}`}>{score}<span className="text-lg">/100</span></span>
+    <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "20px 0" }}>
+      <div style={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
+        <svg width="88" height="88" style={{ transform: "rotate(-90deg)" }}>
+          <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          <motion.circle
+            cx="44" cy="44" r={r}
+            fill="none" stroke={color} strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+        </svg>
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexDirection: "column",
+        }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color }}>{score}</div>
+        </div>
       </div>
-      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${score}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className={`h-full ${c.bar} rounded-full`}
-        />
-      </div>
-      <div className="text-xs text-white/30 mt-2">
-        {score >= 80 ? "Strong relationship — momentum is building." :
-         score >= 60 ? "Moderate health — some follow-ups may be overdue." :
-         "At risk — missed commitments detected."}
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.6)", marginBottom: 4, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          Relationship Health
+        </div>
+        <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 100, overflow: "hidden", width: 160, marginBottom: 8 }}>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${score}%` }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            style={{ height: "100%", background: color, borderRadius: 100 }}
+          />
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{label}</div>
       </div>
     </div>
   );
 }
 
-function Section({ title, items, icon, color = "primary" }) {
-  if (!items || items.length === 0) return null;
-  const colorMap = {
-    primary: "text-primary-400",
-    red: "text-red-400",
-    emerald: "text-emerald-400",
-    yellow: "text-yellow-400",
+function BriefSection({ title, items, icon, color }) {
+  if (!items?.length) return null;
+  const colors = {
+    purple: { bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.15)", text: "#c4b5fd", dot: "#7c3aed" },
+    red:    { bg: "rgba(239,68,68,0.06)",  border: "rgba(239,68,68,0.15)",  text: "#fca5a5", dot: "#ef4444" },
+    green:  { bg: "rgba(16,185,129,0.06)", border: "rgba(16,185,129,0.15)", text: "#6ee7b7", dot: "#10b981" },
+    amber:  { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.15)", text: "#fde68a", dot: "#f59e0b" },
   };
+  const c = colors[color] || colors.purple;
   return (
-    <div className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`text-lg ${colorMap[color]}`}>{icon}</span>
-        <h3 className="font-semibold text-white text-sm">{title}</h3>
+    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 18, padding: 18, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 18 }}>{icon}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: c.text }}>{title}</span>
       </div>
-      <ul className="space-y-2">
+      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {items.map((item, i) => (
           <motion.li
             key={i}
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="flex items-start gap-2 text-sm text-white/60"
+            transition={{ delay: i * 0.06 }}
+            style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}
           >
-            <div className={`w-1.5 h-1.5 rounded-full ${colorMap[color].replace("text-", "bg-")} flex-shrink-0 mt-2`} />
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, flexShrink: 0, marginTop: 6 }} />
             {item}
           </motion.li>
         ))}
@@ -75,158 +94,143 @@ export default function Brief() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    setLoading(true);
-    setError("");
-    setBrief(null);
-    try {
-      const data = await getBrief({ contact_name: name.trim() });
-      setBrief(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError(""); setBrief(null);
+    try { setBrief(await getBrief({ contact_name: name.trim() })); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="page-container"
-    >
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Meeting Brief</h1>
-        <p className="text-white/40">Generate a personalized AI brief powered by recalled memories.</p>
+    <div className="page">
+      {/* Header */}
+      <div style={{
+        background: "linear-gradient(165deg, #0f0520 0%, #1a0845 60%, #0f1a40 100%)",
+        padding: "56px 20px 32px",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(ellipse 55% 60% at 20% 30%, rgba(13,148,136,0.2) 0%, transparent 100%)",
+        }} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div className="badge badge-green" style={{ marginBottom: 12 }}>🧠 AI BRIEF</div>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 6 }}>Meeting Brief</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>AI-powered prep from recalled memories.</div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-3 mb-8 max-w-lg">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter contact name..."
-          className="input-field flex-1"
-        />
-        <button
-          type="submit"
-          disabled={loading || !name.trim()}
-          className="btn-primary flex items-center gap-2 whitespace-nowrap"
-        >
-          {loading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Recalling...
-            </>
-          ) : "Prepare Me"}
-        </button>
-      </form>
+      <div className="section">
+        {/* Search bar */}
+        <form onSubmit={handleSubmit} style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+          <div style={{ flex: 1, position: "relative" }}>
+            <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 18, color: "rgba(255,255,255,0.3)" }}>🔍</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter contact name..."
+              className="input"
+              style={{ paddingLeft: 44 }}
+            />
+          </div>
+          <button type="submit" disabled={loading || !name.trim()} className="btn-primary" style={{ width: "auto", padding: "14px 20px", whiteSpace: "nowrap" }}>
+            {loading ? "..." : "Prepare Me"}
+          </button>
+        </form>
 
-      {/* Typing indicator */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="glass-card p-5 mb-6 flex items-center gap-3"
-          >
-            <div className="flex gap-1">
+        {/* Loading dots */}
+        <AnimatePresence>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", background: "rgba(255,255,255,0.03)", borderRadius: 14, marginBottom: 20, border: "1px solid rgba(255,255,255,0.06)" }}
+            >
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
                   animate={{ y: [0, -6, 0] }}
-                  transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}
-                  className="w-2 h-2 rounded-full bg-primary-500"
+                  transition={{ repeat: Infinity, duration: 0.75, delay: i * 0.15 }}
+                  style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed" }}
                 />
               ))}
-            </div>
-            <span className="text-sm text-white/50">Recalling memories and generating your brief...</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm mb-6"
-          >
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {brief && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-5"
-        >
-          {/* Header */}
-          <div className="glass-card p-6 bg-primary-600/10 border-primary-500/20">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-primary-500/20 border border-primary-500/30 flex items-center justify-center text-primary-400 font-bold">
-                {brief.contact_name.charAt(0)}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{brief.contact_name}</h2>
-                <span className="text-xs text-primary-400 font-medium">
-                  {brief.previous_meetings.length} meeting{brief.previous_meetings.length !== 1 ? "s" : ""} in memory
-                </span>
-              </div>
-            </div>
-            <p className="text-sm text-white/60 leading-relaxed">{brief.contact_summary}</p>
-          </div>
-
-          {/* Health Score */}
-          <HealthMeter score={brief.relationship_health_score} />
-
-          {/* Sections grid */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Section title="Recurring Concerns" items={brief.recurring_concerns} icon="⚠" color="red" />
-            <Section title="Pending Tasks" items={brief.pending_tasks} icon="📋" color="yellow" />
-            <Section title="Suggested Talking Points" items={brief.suggested_talking_points} icon="💬" color="primary" />
-            <Section title="Recommended Actions" items={brief.recommended_actions} icon="✅" color="emerald" />
-          </div>
-
-          {/* Meeting History */}
-          {brief.previous_meetings.length > 0 && (
-            <div className="glass-card p-5">
-              <h3 className="font-semibold text-white text-sm mb-4">Meeting History</h3>
-              <div className="space-y-3">
-                {brief.previous_meetings.map((m, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.07 }}
-                    className="flex gap-3"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="timeline-dot" />
-                      {i < brief.previous_meetings.length - 1 && (
-                        <div className="w-px flex-1 bg-white/5 mt-1" />
-                      )}
-                    </div>
-                    <div className="pb-3">
-                      <div className="text-xs text-primary-400 font-medium mb-0.5">{m.date}</div>
-                      <p className="text-sm text-white/50 leading-relaxed line-clamp-2">{m.raw_notes}</p>
-                      {m.concerns && (
-                        <div className="text-xs text-red-400/60 mt-1">Concern: {m.concerns}</div>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Recalling memories…</span>
+            </motion.div>
           )}
-        </motion.div>
-      )}
-    </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ padding: "12px 16px", borderRadius: 14, marginBottom: 20, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: 13, color: "#f87171" }}>
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {brief && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            {/* Contact header */}
+            <div className="brief-header" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+                <div className="avatar avatar-purple" style={{ width: 52, height: 52, borderRadius: 16, fontSize: 17 }}>
+                  {brief.contact_name.charAt(0)}
+                </div>
+                <div>
+                  <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em" }}>{brief.contact_name}</div>
+                  <div className="badge badge-purple" style={{ marginTop: 4 }}>
+                    {brief.previous_meetings.length} meeting{brief.previous_meetings.length !== 1 ? "s" : ""} in memory
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>{brief.contact_summary}</p>
+            </div>
+
+            {/* Health score */}
+            <div className="card" style={{ padding: "4px 20px", marginBottom: 16 }}>
+              <ScoreRing score={brief.relationship_health_score} />
+            </div>
+
+            {/* Brief sections */}
+            <BriefSection title="Recurring Concerns" items={brief.recurring_concerns} icon="⚠️" color="red" />
+            <BriefSection title="Pending Tasks" items={brief.pending_tasks} icon="📋" color="amber" />
+            <BriefSection title="Suggested Talking Points" items={brief.suggested_talking_points} icon="💬" color="purple" />
+            <BriefSection title="Recommended Actions" items={brief.recommended_actions} icon="✅" color="green" />
+
+            {/* Meeting history */}
+            {brief.previous_meetings.length > 0 && (
+              <div className="card" style={{ padding: "20px 20px 8px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 20 }}>
+                  Meeting History
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {brief.previous_meetings.map((m, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.07 }}
+                      style={{ display: "flex", gap: 16, paddingBottom: 20 }}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                        <div className="timeline-dot" />
+                        {i < brief.previous_meetings.length - 1 && (
+                          <div style={{ width: 2, flex: 1, background: "rgba(124,58,237,0.2)", minHeight: 24, marginTop: 4 }} />
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", marginBottom: 4 }}>{m.date}</div>
+                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>{m.raw_notes}</p>
+                        {m.concerns && (
+                          <div style={{ fontSize: 11, color: "rgba(248,113,113,0.7)", marginTop: 4 }}>⚠ {m.concerns}</div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 }
