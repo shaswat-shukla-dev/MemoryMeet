@@ -212,7 +212,7 @@ MIT
 ---
 ## Development Team
 
-* **[Friend 3 Name]** ([@Username](https://github.com/)) — Lead AI Engineer & System Architect
+* **[Shaswat Shukla]** ([@shaswat-shukla-dev](https://github.com/)) — Lead AI Engineer & System Architect
 * **[Shruti Jain]** ([@shrutijain73](https://github.com/)) — Backend Engineer & API Developer
-* **[Friend 3 Name]** ([@Username](https://github.com/)) — Frontend Engineer & UI Designer
+* **[Jiya Sharma]** ([@jia1536](https://github.com/)) — Frontend Engineer & UI Designer
 * **[Pallavi Bisen]** ([@pallavibisen0007](https://github.com/)) — DevOps & Prompt Engineer
