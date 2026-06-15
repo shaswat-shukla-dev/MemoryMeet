@@ -209,7 +209,7 @@ See **DEPLOYMENT.md** for the full Vercel + Render walkthrough.
 
 MIT
 
---
+---
 ## Development Team
 
 * **[Friend 1 Name]** ([@Username](https://github.com/)) — Lead AI Engineer & System Architect
