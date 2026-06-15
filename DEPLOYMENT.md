@@ -6,11 +6,19 @@ Complete walkthrough: **local validation first**, then **Render (backend) + Verc
 
 ## Phase 1: Local Validation (Always First)
 
-### Step 1.1 — Start Hindsight Server (if using real Hindsight)
+### Step 1.1 — Configure Hindsight Memory
 
-**Option A — Hindsight Cloud:** Sign up at https://ui.hindsight.vectorize.io, get your endpoint URL.
+MemoryMeet supports three memory configurations:
 
-**Option B — Local Docker:**
+### Option A — Hindsight Cloud (Recommended)
+
+1. Sign up at https://ui.hindsight.vectorize.io
+2. Create a workspace/project
+3. Copy your endpoint URL
+4. Use it as `HINDSIGHT_BASE_URL`
+
+### Option B — Local Docker
+
 ```bash
 docker run -it --pull always --name hindsight --restart unless-stopped \
   -p 8888:8888 -p 9999:9999 \
@@ -18,225 +26,400 @@ docker run -it --pull always --name hindsight --restart unless-stopped \
   -e HINDSIGHT_API_LLM_PROVIDER=groq \
   ghcr.io/vectorize-io/hindsight:latest
 ```
-Hindsight UI: http://localhost:9999 · API: http://localhost:8888
 
-**Option C — Skip Hindsight:** Leave `HINDSIGHT_BASE_URL` blank — SQLite memory fallback activates automatically.
+Available endpoints:
+
+| Service | URL |
+|----------|----------|
+| Hindsight API | http://localhost:8888 |
+| Hindsight Dashboard | http://localhost:9999 |
+
+Verify:
+
+```bash
+curl http://localhost:8888/health
+```
+
+### Option C — SQLite Fallback
+
+Leave `HINDSIGHT_BASE_URL` blank.
+
+MemoryMeet automatically falls back to SQLite memory storage.
 
 ---
 
-### Step 1.2 — Backend local setup
+### Step 1.2 — Backend Local Setup
 
 ```bash
 cd backend
+
 python3 -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
+
 cp .env.example .env
 ```
 
-Edit `.env`:
+Update `.env`:
+
 ```env
 GROQ_API_KEY=your_groq_api_key
+
 DATABASE_URL=sqlite:///./memorymeet.db
+
 FRONTEND_URL=http://localhost:5173
-HINDSIGHT_BASE_URL=http://localhost:8888    # or cloud URL, or leave blank
+
+# Hindsight Cloud URL or local URL
+# Leave blank for SQLite fallback
+HINDSIGHT_BASE_URL=http://localhost:8888
 ```
 
-Start the server:
+Start backend:
+
 ```bash
 uvicorn app:app --reload --port 8000
 ```
 
-### Step 1.3 — Verify backend locally
+Backend URL:
 
-```bash
-# Health check — shows Hindsight status
-curl http://localhost:8000/health
-
-# Add a meeting (triggers Hindsight retain)
-curl -X POST http://localhost:8000/meeting \
-  -H "Content-Type: application/json" \
-  -d '{"contact_name":"Sarah Chen","company":"Acme Corp","role":"CTO","meeting_notes":"Concerned about security and SOC2. Budget 50k. Needs proposal by Friday."}'
-
-# Generate brief (triggers Hindsight recall + Groq)
-curl -X POST http://localhost:8000/brief \
-  -H "Content-Type: application/json" \
-  -d '{"contact_name":"Sarah Chen"}'
-
-# Get insights (triggers Hindsight reflect + Groq)
-curl -X POST http://localhost:8000/insights \
-  -H "Content-Type: application/json" \
-  -d '{"contact_name":"Sarah Chen","question":"What patterns does Sarah show?"}'
+```text
+http://localhost:8000
 ```
-
-Expected `/health` with Hindsight enabled:
-```json
-{"status":"ok","service":"MemoryMeet API","hindsight":"enabled"}
-```
-
-### Step 1.4 — Frontend local setup
-
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-Visit http://localhost:5173 and verify:
-- [ ] Dashboard loads
-- [ ] Add Meeting stores data
-- [ ] Brief shows AI-generated content
-- [ ] Insights returns pattern analysis
-
-**Do not proceed to production until all local checks pass.**
 
 ---
 
-## Phase 2: Backend Deployment on Render
+### Step 1.3 — Verify Backend
+
+#### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected:
+
+```json
+{
+  "status": "ok",
+  "service": "MemoryMeet API",
+  "hindsight": "enabled"
+}
+```
+
+#### Create Meeting
+
+```bash
+curl -X POST http://localhost:8000/meeting \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_name":"Sarah Chen",
+    "company":"Acme Corp",
+    "role":"CTO",
+    "meeting_notes":"Concerned about security and SOC2. Budget 50k. Needs proposal by Friday."
+  }'
+```
+
+Expected:
+
+```json
+{
+  "memory_status":"saved"
+}
+```
+
+#### Generate Brief
+
+```bash
+curl -X POST http://localhost:8000/brief \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_name":"Sarah Chen"
+  }'
+```
+
+Flow:
+
+```text
+Hindsight Recall → Groq LLM
+```
+
+#### Generate Insights
+
+```bash
+curl -X POST http://localhost:8000/insights \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_name":"Sarah Chen",
+    "question":"What patterns does Sarah show?"
+  }'
+```
+
+Flow:
+
+```text
+Hindsight Reflect → Groq LLM
+```
+
+---
+
+### Step 1.4 — Frontend Local Setup
+
+```bash
+cd frontend
+
+npm install
+
+cp .env.example .env
+
+npm run dev
+```
+
+Frontend URL:
+
+```text
+http://localhost:5173
+```
+
+---
+
+### Local Validation Checklist
+
+- [ ] Backend starts successfully
+- [ ] Frontend loads successfully
+- [ ] `/health` returns OK
+- [ ] Add Meeting stores data
+- [ ] Brief Generator returns AI-generated content
+- [ ] Insights returns analysis
+- [ ] No CORS errors in browser console
+- [ ] Hindsight status is correct
+
+> Do not proceed to deployment until all local checks pass.
+
+---
+
+## Phase 2: Backend Deployment (Render)
 
 ### Step 2.1 — Push to GitHub
 
-Push your project to a GitHub repository.
+```bash
+git add .
+git commit -m "Production deployment"
+git push origin main
+```
 
 ### Step 2.2 — Create Render Web Service
 
-1. Go to [render.com](https://render.com) → **New → Web Service**
-2. Connect your GitHub repo
-3. Configure:
-
 | Setting | Value |
-|---------|-------|
+|----------|----------|
 | Root Directory | `backend` |
 | Runtime | Python 3 |
 | Build Command | `pip install -r requirements.txt` |
 | Start Command | `uvicorn app:app --host 0.0.0.0 --port $PORT` |
 
-### Step 2.3 — Set Render Environment Variables
+### Step 2.3 — Environment Variables
 
 | Key | Value |
-|-----|-------|
-| `GROQ_API_KEY` | Your Groq key from console.groq.com |
+|------|------|
+| `GROQ_API_KEY` | Your Groq API key |
 | `DATABASE_URL` | `sqlite:///./memorymeet.db` |
-| `FRONTEND_URL` | Your Vercel URL (set after frontend deploy) |
-| `HINDSIGHT_BASE_URL` | Your Hindsight Cloud endpoint URL (or leave blank) |
+| `FRONTEND_URL` | Your Vercel URL |
+| `HINDSIGHT_BASE_URL` | Hindsight endpoint URL |
 
-> **Hindsight on Render:** Use **Hindsight Cloud** for production (Option A).
-> Self-hosted Hindsight requires a separate server — the Hindsight Cloud endpoint is the simplest choice for Render deployments.
+Example:
 
-> **SQLite on Render free tier:** Data resets on each deploy. For persistent storage, use Render's free PostgreSQL: create a PostgreSQL instance, copy the connection string, update `DATABASE_URL`, and add `psycopg2-binary` to `requirements.txt`.
+```env
+GROQ_API_KEY=gsk_xxxxx
 
-### Step 2.4 — Deploy and verify
+DATABASE_URL=sqlite:///./memorymeet.db
 
-After deploy, note your URL (e.g. `https://memorymeet-backend.onrender.com`):
+FRONTEND_URL=https://memorymeet.vercel.app
+
+HINDSIGHT_BASE_URL=https://your-hindsight-endpoint
+```
+
+### PostgreSQL Recommendation
+
+SQLite is not persistent on Render free instances.
+
+For production:
+
+1. Create a Render PostgreSQL database
+2. Copy the connection string
+3. Replace `DATABASE_URL`
+4. Add:
+
+```txt
+psycopg2-binary
+```
+
+Example:
+
+```env
+DATABASE_URL=postgresql://user:password@host/database
+```
+
+### Step 2.4 — Verify Deployment
 
 ```bash
 curl https://memorymeet-backend.onrender.com/health
-# Expected: {"status":"ok","hindsight":"enabled"}
-
-curl -X POST https://memorymeet-backend.onrender.com/meeting \
-  -H "Content-Type: application/json" \
-  -d '{"contact_name":"Test User","company":"Test Corp","role":"CTO","meeting_notes":"Security concerns. Budget 20k."}'
 ```
 
-**Production backend checklist:**
-- [ ] `/health` returns OK with hindsight status
-- [ ] `POST /meeting` returns `memory_status: "saved"`
-- [ ] `POST /brief` returns full brief JSON
-- [ ] `POST /insights` returns insight text
-- [ ] `GROQ_API_KEY` is set and valid
-- [ ] `HINDSIGHT_BASE_URL` is set (or blank for fallback)
-- [ ] `FRONTEND_URL` will match your Vercel domain
+Create test meeting:
+
+```bash
+curl -X POST https://memorymeet-backend.onrender.com/meeting \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact_name":"Test User",
+    "company":"Test Corp",
+    "role":"CTO",
+    "meeting_notes":"Security concerns. Budget 20k."
+  }'
+```
+
+### Backend Checklist
+
+- [ ] Render service running
+- [ ] Health endpoint responding
+- [ ] Groq key configured
+- [ ] Hindsight configured
+- [ ] Meeting endpoint working
+- [ ] Brief endpoint working
+- [ ] Insights endpoint working
+- [ ] CORS configured correctly
 
 ---
 
-## Phase 3: Frontend Deployment on Vercel
+## Phase 3: Frontend Deployment (Vercel)
 
-### Step 3.1 — Deploy via Vercel Dashboard
+### Step 3.1 — Create Vercel Project
 
-1. Go to [vercel.com](https://vercel.com) → **Add New → Project**
-2. Import your GitHub repo
-3. Set **Root Directory** to `frontend`
-4. Confirm settings:
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
+| Setting | Value |
+|----------|----------|
+| Root Directory | `frontend` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
 
-### Step 3.2 — Set Vercel Environment Variable
+### Step 3.2 — Environment Variables
 
-| Key | Value |
-|-----|-------|
-| `VITE_API_BASE_URL` | `https://memorymeet-backend.onrender.com` |
-
-Redeploy after adding the variable.
-
-### Step 3.3 — Update CORS on Render
-
-Go back to Render → update `FRONTEND_URL` to your Vercel domain:
+```env
+VITE_API_BASE_URL=https://memorymeet-backend.onrender.com
 ```
+
+Redeploy after saving.
+
+### Step 3.3 — Update Backend CORS
+
+Render environment variable:
+
+```env
 FRONTEND_URL=https://memorymeet.vercel.app
 ```
 
-### Step 3.4 — Verify end-to-end
+Correct:
 
-Open your Vercel URL and confirm:
-- [ ] Dashboard shows stats from Render backend
-- [ ] Add Meeting submits and stores memory in Hindsight
-- [ ] Brief Generator returns AI brief backed by Hindsight recall
-- [ ] Insights returns Hindsight reflect analysis
-- [ ] Timeline shows meetings
+```text
+https://memorymeet.vercel.app
+```
+
+Incorrect:
+
+```text
+https://memorymeet.vercel.app/
+```
+
+### Step 3.4 — End-to-End Verification
+
+- [ ] Dashboard loads
+- [ ] Statistics load
+- [ ] Add Meeting works
+- [ ] Timeline works
+- [ ] Brief generation works
+- [ ] Insights generation works
+- [ ] No browser console errors
 
 ---
 
-## End-to-End Checklist
+## Architecture
 
-### Backend (Render)
-- [ ] Service is running (Render dashboard shows green)
-- [ ] `/health` returns `hindsight: enabled` (or fallback if not configured)
-- [ ] `POST /meeting` triggers Hindsight retain
-- [ ] `POST /brief` triggers Hindsight recall → Groq
-- [ ] `POST /insights` triggers Hindsight reflect → Groq
-- [ ] CORS allows Vercel domain
-
-### Hindsight
-- [ ] Hindsight server is running (Cloud or local)
-- [ ] `/health` shows `"hindsight":"enabled"` (not fallback)
-- [ ] `retain` is called on meeting save
-- [ ] `recall` returns memories on brief generation
-- [ ] `reflect` returns insights on pattern questions
-- [ ] Memory improves with each new meeting added
-
-### Frontend (Vercel)
-- [ ] `VITE_API_BASE_URL` points to Render URL
-- [ ] No CORS errors in browser console
-- [ ] All pages load and function correctly
+```text
+Frontend (Vercel)
+        │
+        ▼
+Backend API (Render)
+        │
+        ├── Groq LLM
+        │
+        └── Hindsight Memory
+                │
+                ├── Hindsight Cloud
+                └── SQLite Fallback
+```
 
 ---
 
 ## Troubleshooting
 
-### Hindsight shows "disabled (using SQLite fallback)"
-- Check `HINDSIGHT_BASE_URL` is set in your `.env`
-- Verify the Hindsight server is reachable: `curl http://localhost:8888/health`
-- For Hindsight Cloud, confirm the endpoint URL from your dashboard
+### Hindsight Shows Disabled
 
-### `ModuleNotFoundError: No module named 'hindsight_client'`
+```bash
+curl http://localhost:8888/health
+```
+
+Verify:
+
+- `HINDSIGHT_BASE_URL` is configured
+- Hindsight service is running
+- Endpoint is reachable
+
+### Missing Hindsight Client
+
 ```bash
 pip install hindsight-client==0.7.2
 ```
 
-### Groq `401 Unauthorized`
-- Re-copy key from [console.groq.com](https://console.groq.com)
-- Verify `GROQ_API_KEY` is set in `.env`
+### Groq 401 Unauthorized
 
-### `Connection refused` on port 8000
-- Backend server is not running
-- Open a new terminal and run: `uvicorn app:app --reload --port 8000`
-- Keep that terminal open — the server must stay running
+Verify:
 
-### Data resets on Render deploys (SQLite)
-- Upgrade to Render paid plan with persistent disk, or
-- Switch to PostgreSQL: create Render PostgreSQL → copy connection string → update `DATABASE_URL`
+- API key is valid
+- `GROQ_API_KEY` is configured correctly
+- No extra spaces or quotes
 
-### CORS errors in browser
-- Confirm `FRONTEND_URL` on Render exactly matches your Vercel domain
-- No trailing slash: `https://memorymeet.vercel.app` ✓
+### Connection Refused on Port 8000
+
+```bash
+uvicorn app:app --reload --port 8000
+```
+
+### SQLite Data Resets
+
+Expected on Render free instances.
+
+Solutions:
+
+- Use PostgreSQL
+- Use Render persistent disk
+
+### CORS Errors
+
+Verify:
+
+```env
+FRONTEND_URL=https://memorymeet.vercel.app
+```
+
+Checklist:
+
+- HTTPS enabled
+- No trailing slash
+- Exact Vercel URL match
+
+---
+
+## Deployment Rule
+
+**Always validate locally first.**
+
+If something fails locally, fix it before deploying to Render or Vercel.
