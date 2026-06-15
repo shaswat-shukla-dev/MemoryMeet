@@ -6,6 +6,7 @@ import {
   Sparkles, ChevronRight, ArrowUpRight, AlertTriangle, ShieldCheck,
 } from "lucide-react";
 import { getStats, getContacts } from "../services/api";
+import { useUser } from "../context/UserContext";
 
 function useCountUp(target, duration = 1400) {
   const [value, setValue] = useState(0);
@@ -54,6 +55,8 @@ function scoreClass(s) {
 }
 
 export default function Dashboard() {
+  const { userName } = useUser();
+  const firstName = userName ? userName.split(" ")[0] : "there";
   const [stats, setStats]     = useState({ total_contacts: 0, total_meetings: 0, total_memories: 0 });
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +125,7 @@ export default function Dashboard() {
             {greeting} 👋
           </div>
           <div className="font-display" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-            Welcome back, <span className="text-gradient">Sarah</span>
+            Welcome back, <span className="text-gradient">{firstName}</span>
           </div>
           <div style={{ fontSize: 14, color: "var(--text-tertiary)", marginTop: 6, maxWidth: 460 }}>
             Here's your relationship intelligence dashboard — everything you've remembered, organized for what's next.
