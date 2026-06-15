@@ -213,6 +213,6 @@ MIT
 ## Development Team
 
 * **[Friend 3 Name]** ([@Username](https://github.com/)) — Lead AI Engineer & System Architect
-* **[Your Name]** ([@YourUsername](https://github.com/)) — Backend Engineer & API Developer
+* **[Shruti Jain]** ([@shrutijain73](https://github.com/)) — Backend Engineer & API Developer
 * **[Friend 3 Name]** ([@Username](https://github.com/)) — Frontend Engineer & UI Designer
 * **[Pallavi Bisen]** ([@pallavibisen0007](https://github.com/)) — DevOps & Prompt Engineer
