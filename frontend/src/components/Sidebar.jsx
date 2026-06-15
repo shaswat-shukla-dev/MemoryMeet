@@ -2,8 +2,11 @@ import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Brain, Settings } from "lucide-react";
 import { NAV_ITEMS } from "../config/nav";
+import { useUser } from "../context/UserContext";
 
 export default function Sidebar() {
+  const { userName, userRole, initials } = useUser();
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -55,11 +58,11 @@ export default function Sidebar() {
               fontFamily: "'Sora', sans-serif",
             }}
           >
-            SJ
+            {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="sidebar-user-name">Sarah Johnson</div>
-            <div className="sidebar-user-role">Account Executive</div>
+            <div className="sidebar-user-name">{userName || "New User"}</div>
+            <div className="sidebar-user-role">{userRole || "Member"}</div>
           </div>
           <Settings size={16} color="var(--text-faint)" />
         </div>

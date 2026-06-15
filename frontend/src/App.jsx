@@ -6,6 +6,7 @@ import AddMeeting from "./pages/AddMeeting";
 import Brief from "./pages/Brief";
 import Insights from "./pages/Insights";
 import Timeline from "./pages/Timeline";
+import { UserProvider } from "./context/UserContext";
 
 const pageTransition = {
   initial: { opacity: 0, y: 12 },
@@ -19,46 +20,11 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route
-          path="/"
-          element={
-            <motion.div {...pageTransition}>
-              <Dashboard />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/add"
-          element={
-            <motion.div {...pageTransition}>
-              <AddMeeting />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/brief"
-          element={
-            <motion.div {...pageTransition}>
-              <Brief />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/insights"
-          element={
-            <motion.div {...pageTransition}>
-              <Insights />
-            </motion.div>
-          }
-        />
-        <Route
-          path="/timeline"
-          element={
-            <motion.div {...pageTransition}>
-              <Timeline />
-            </motion.div>
-          }
-        />
+        <Route path="/" element={<motion.div {...pageTransition}><Dashboard /></motion.div>} />
+        <Route path="/add" element={<motion.div {...pageTransition}><AddMeeting /></motion.div>} />
+        <Route path="/brief" element={<motion.div {...pageTransition}><Brief /></motion.div>} />
+        <Route path="/insights" element={<motion.div {...pageTransition}><Insights /></motion.div>} />
+        <Route path="/timeline" element={<motion.div {...pageTransition}><Timeline /></motion.div>} />
       </Routes>
     </AnimatePresence>
   );
@@ -66,10 +32,12 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <Router>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
-    </Router>
+    <UserProvider>
+      <Router>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </Router>
+    </UserProvider>
   );
 }

@@ -1,9 +1,11 @@
 import { useLocation, Link } from "react-router-dom";
 import { Search, Bell, Plus } from "lucide-react";
 import { NAV_ITEMS } from "../config/nav";
+import { useUser } from "../context/UserContext";
 
 export default function Topbar() {
   const { pathname } = useLocation();
+  const { initials } = useUser();
   const current = NAV_ITEMS.find((n) => n.to === pathname) || NAV_ITEMS[0];
 
   return (
@@ -29,7 +31,7 @@ export default function Topbar() {
           <div className="notif-dot" />
         </button>
 
-        <div className="topbar-avatar">SJ</div>
+        <div className="topbar-avatar">{initials}</div>
       </div>
     </header>
   );

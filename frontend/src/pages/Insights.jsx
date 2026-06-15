@@ -116,7 +116,7 @@ export default function Insights() {
                     <Sparkles size={18} color="#fbbf24" />
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#fde68a" }}>AI Analysis</span>
                   </div>
-                  <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75 }}>{result.answer}</p>
+                  <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75 }}>{result.insights}</p>
                 </motion.div>
               ) : (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
