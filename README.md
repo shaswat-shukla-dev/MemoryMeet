@@ -208,3 +208,12 @@ See **DEPLOYMENT.md** for the full Vercel + Render walkthrough.
 ## License
 
 MIT
+
+--
+### Development Team
+## 👥 Development Team
+
+* **[Friend 1 Name]** ([@Username](https://github.com/)) — Lead AI Engineer & System Architect
+* **[Your Name]** ([@YourUsername](https://github.com/)) — Backend Engineer & API Developer
+* **[Friend 3 Name]** ([@Username](https://github.com/)) — Frontend Engineer & UI Designer
+* **[Friend 4 Name]** ([@Username](https://github.com/)) — DevOps & Prompt Engineer
