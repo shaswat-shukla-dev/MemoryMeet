@@ -11,6 +11,87 @@ const SUGGESTED = [
   "What should I prioritize next?",
 ];
 
+/** Converts markdown-ish text from the LLM into structured JSX blocks */
+function FormattedInsights({ text }) {
+  const lines = text.split("\n").filter((l) => l.trim() !== "");
+
+  const renderInline = (str) => {
+    // Replace **bold** with <strong>
+    const parts = str.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, i) =>
+      i % 2 === 1
+        ? <strong key={i} style={{ color: "var(--text-primary)", fontWeight: 700 }}>{part}</strong>
+        : part
+    );
+  };
+
+  const blocks = [];
+  let bulletBuffer = [];
+
+  const flushBullets = () => {
+    if (bulletBuffer.length === 0) return;
+    blocks.push(
+      <ul key={`ul-${blocks.length}`} style={{ margin: "10px 0", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+        {bulletBuffer.map((item, i) => (
+          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <span style={{
+              marginTop: 5, flexShrink: 0, width: 6, height: 6, borderRadius: "50%",
+              background: "#f59e0b", display: "inline-block"
+            }} />
+            <span style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7 }}>
+              {renderInline(item)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+    bulletBuffer = [];
+  };
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+
+    // Bullet: starts with *, -, or •
+    if (/^[\*\-•]\s+/.test(trimmed)) {
+      bulletBuffer.push(trimmed.replace(/^[\*\-•]\s+/, ""));
+      return;
+    }
+
+    // Numbered list: starts with "1." "2." etc
+    if (/^\d+\.\s+/.test(trimmed)) {
+      bulletBuffer.push(trimmed.replace(/^\d+\.\s+/, ""));
+      return;
+    }
+
+    flushBullets();
+
+    // Heading: line is all bold (**text**) or ends with ":"
+    if (/^\*\*.*\*\*:?$/.test(trimmed) || (trimmed.endsWith(":") && trimmed.length < 60)) {
+      const label = trimmed.replace(/\*\*/g, "").replace(/:$/, "");
+      blocks.push(
+        <div key={idx} style={{
+          fontSize: 12, fontWeight: 700, color: "#fbbf24",
+          letterSpacing: "0.06em", textTransform: "uppercase",
+          marginTop: blocks.length > 0 ? 18 : 0, marginBottom: 6,
+        }}>
+          {label}
+        </div>
+      );
+      return;
+    }
+
+    // Plain paragraph
+    blocks.push(
+      <p key={idx} style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75, margin: "6px 0" }}>
+        {renderInline(trimmed)}
+      </p>
+    );
+  });
+
+  flushBullets();
+  return <div>{blocks}</div>;
+}
+
 export default function Insights() {
   const [form, setForm]   = useState({ contact_name: "", question: "" });
   const [loading, setLoading] = useState(false);
@@ -112,11 +193,11 @@ export default function Insights() {
               ) : result ? (
                 <motion.div key="result" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                   className="card card-static" style={{ padding: 24 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                     <Sparkles size={18} color="#fbbf24" />
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#fde68a" }}>AI Analysis</span>
                   </div>
-                  <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.75 }}>{result.insights}</p>
+                  <FormattedInsights text={result.insights} />
                 </motion.div>
               ) : (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
